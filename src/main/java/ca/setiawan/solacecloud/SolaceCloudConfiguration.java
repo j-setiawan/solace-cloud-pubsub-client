@@ -1,11 +1,10 @@
 package ca.setiawan.solacecloud;
 
-import com.jayway.jsonpath.Criteria;
 import com.jayway.jsonpath.DocumentContext;
-import com.jayway.jsonpath.Filter;
 import com.jayway.jsonpath.JsonPath;
 import com.solace.messaging.MessagingService;
 import com.solace.messaging.config.AuthenticationStrategy;
+import com.solace.messaging.config.SolaceProperties;
 import com.solace.messaging.config.profile.ConfigurationProfile;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -45,12 +44,14 @@ public class SolaceCloudConfiguration {
         Map<String, Object> credentials = jsonContext.read("data.messagingProtocols.[0]");
         List<String> smfUris = jsonContext.read("data.messagingProtocols.[?(@.name==\"SMF\")].endPoints.[?(@.name==\"Secured SMF\")].uris.[0]");
 
+        String vpnName = jsonContext.read("data.msgVpnName");
         String username = (String) credentials.get("username");
         String password = (String) credentials.get("password");
         String url = smfUris.get(0);
 
         Properties properties = new Properties();
-        properties.setProperty("host", url);
+        properties.setProperty(SolaceProperties.ServiceProperties.VPN_NAME, vpnName);
+        properties.setProperty(SolaceProperties.TransportLayerProperties.HOST, url);
 
         MessagingService messagingService = MessagingService.builder(ConfigurationProfile.V1)
                 .fromProperties(properties)
