@@ -5,6 +5,8 @@ import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.Filter;
 import com.jayway.jsonpath.JsonPath;
 import com.solace.messaging.MessagingService;
+import com.solace.messaging.config.AuthenticationStrategy;
+import com.solace.messaging.config.profile.ConfigurationProfile;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -19,6 +21,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 @Configuration
 @ConditionalOnProperty(value = "solacecloud.api-key")
@@ -46,7 +49,15 @@ public class SolaceCloudConfiguration {
         String password = (String) credentials.get("password");
         String url = smfUris.get(0);
 
-        return null;
+        Properties properties = new Properties();
+        properties.setProperty("host", url);
+
+        MessagingService messagingService = MessagingService.builder(ConfigurationProfile.V1)
+                .fromProperties(properties)
+                .withAuthenticationStrategy(AuthenticationStrategy.BasicUserNamePassword.of(username, password))
+                .build().connect();
+
+        return messagingService;
     }
 
 }
